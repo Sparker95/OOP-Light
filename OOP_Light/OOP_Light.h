@@ -157,7 +157,8 @@ if (baseClassNameStr != "") then { \
 	_oop_memList = +GET_SPECIAL_MEM(baseClassNameStr, MEM_LIST_STR); \
 	_oop_staticMemList = +GET_SPECIAL_MEM(baseClassNameStr, STATIC_MEM_LIST_STR); \
 	private _oop_topParent = _oop_parents select ((count _oop_parents) - 1); \
-	{ private _oop_methodCode = FORCE_GET_STATIC_MEM(_oop_topParent, _x); FORCE_SET_STATIC_MEM(classNameStr, _x, _oop_methodCode); \
+	{ private _oop_methodCode = FORCE_GET_STATIC_MEM(_oop_topParent, _x); \
+	diag_log format ["Copying method: %1", _x]; FORCE_SET_STATIC_MEM(classNameStr, _x, _oop_methodCode); \
 	} forEach (_oop_staticMemList - ["new", "delete", "copy"]); \
 }; \
 SET_SPECIAL_MEM(_oop_classNameStr, PARENTS_STR, _oop_parents); \
