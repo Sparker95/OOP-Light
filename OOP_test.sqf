@@ -103,12 +103,16 @@ private _pos = CALL_METHOD(_veh0, "getPos", []);
 diag_log format [">> _veh0 returned pos: %1", _pos];
 
 SET_MEM(_veh0, "pos", 6);
+diag_log "OOP should report failure here...";
 SET_MEM(_veh0, "speed", 6); //should fail: unknown member
 SET_STATIC_MEM("vehicle", "factory", 33);
+diag_log "OOP should report failure here...";
 SET_STATIC_MEM("vehicle", "amount", 2); //should fail: unknown member
-SET_STATIC_MEM("vehicle123", "factory", 2);
+diag_log "OOP should report failure here...";
+SET_STATIC_MEM("vehicle123", "factory", 2); //should fail: unknown class
 
 //Should fail: unknown class
+diag_log "OOP should report failure here...";
 CLASS("Boat", "Water")
 ENDCLASS;
 

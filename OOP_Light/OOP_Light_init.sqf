@@ -19,6 +19,13 @@ OOP_error_memberNotFound = {
 	[_file, _line, _errorText] call OOP_error;
 };
 
+// Print error when a method is not found
+OOP_error_methodNotFound = {
+	params ["_file", "_line", "_classNameStr", "_methodNameStr"];
+	private _errorText = format ["class '%1' has no method named '%2'", _classNameStr, _methodNameStr];
+	[_file, _line, _errorText] call OOP_error;
+};
+
 //Print error when specified object is not an object
 OOP_error_notObject = {
 	params ["_file", "_line", "_objNameStr"];
@@ -94,6 +101,25 @@ OOP_assert_member = {
 	private _valid = _memNameStr in _memList;
 	if(!_valid) then {
 		[_file, _line, _classNameStr, _memNameStr] call OOP_error_memberNotFound;
+	};
+	//Return value
+	_valid
+};
+
+//Check method and print error if it's not found
+OOP_assert_method = {
+	params["_classNameStr", "_methodNameStr", "_file", "_line"];	
+	//Get static member list of this class 
+	private _methodList = GET_SPECIAL_MEM(_classNameStr, METHOD_LIST_STR);
+	//Check if it's a class
+	if(isNil "_methodList") exitWith {
+		[_file, _line, _classNameStr] call OOP_error_notClass;
+		false;
+	};
+	//Check method
+	private _valid = _methodNameStr in _methodList;
+	if(!_valid) then {
+		[_file, _line, _classNameStr, _methodNameStr] call OOP_error_methodNotFound;
 	};
 	//Return value
 	_valid

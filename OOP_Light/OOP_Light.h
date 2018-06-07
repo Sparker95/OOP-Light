@@ -18,6 +18,7 @@
  * nextID			- NUMBER counter to provide a new ID each time an object of this class is created
  * memList			- ARRAY with all members of this class
  * staticMemList	- ARRAY with all static members of this class
+ * methodList		- ARRAY with all methods and static methods of this class
  *
  */
 
@@ -46,6 +47,7 @@
 #define OBJECT_SEPARATOR "_N_"
 #define SPECIAL_SEPARATOR "_spm_"
 #define STATIC_SEPARATOR "_stm_"
+#define METHOD_SEPARATOR "_fnc_"
 
 // ----------------------------------------------------------------------
 // |          I N T E R N A L   N A M E   F O R M A T T I N G           |
@@ -56,6 +58,9 @@
 
 //String name of a static member
 #define CLASS_STATIC_MEM_NAME_STR(classNameStr, memNameStr) (OOP_PREFIX + classNameStr + STATIC_SEPARATOR + memNameStr)
+
+//String name of a method
+#define CLASS_METHOD_NAME_STR(classNameStr, methodNameStr) (OOP_PREFIX + classNameStr + METHOD_SEPARATOR + methodNameStr)
 
 //String name of a special member
 #define CLASS_SPECIAL_MEM_NAME_STR(classNameStr, memNameStr) (OOP_PREFIX + classNameStr + SPECIAL_SEPARATOR + memNameStr)
@@ -70,6 +75,7 @@
 #define NEXT_ID_STR "nextID"
 #define MEM_LIST_STR "memList"
 #define STATIC_MEM_LIST_STR "staticMemList"
+#define METHOD_LIST_STR "methodList"
 #define PARENTS_STR "parents"
 #define OOP_PARENT_STR "oop_parent"
 
@@ -79,9 +85,12 @@
 
 #define FORCE_SET_MEM(objNameStr, memNameStr, value) NAMESPACE setVariable [OBJECT_MEM_NAME_STR(objNameStr, memNameStr), value]
 #define FORCE_SET_STATIC_MEM(classNameStr, memNameStr, value) NAMESPACE setVariable [CLASS_STATIC_MEM_NAME_STR(classNameStr, memNameStr), value]
+#define FORCE_SET_METHOD(classNameStr, methodNameStr, code) NAMESPACE setVariable [CLASS_METHOD_NAME_STR(classNameStr, methodNameStr), code]
 #define FORCE_GET_MEM(objNameStr, memNameStr) ( NAMESPACE getVariable OBJECT_MEM_NAME_STR(objNameStr, memNameStr) )
 #define FORCE_GET_STATIC_MEM(classNameStr, memNameStr) ( NAMESPACE getVariable CLASS_STATIC_MEM_NAME_STR(classNameStr, memNameStr) )
+#define FORCE_GET_METHOD(classNameStr, methodNameStr) ( NAMESPACE getVariable CLASS_METHOD_NAME_STR(classNameStr, methodNameStr) )
 
+//Special members don't use run time checks
 #define SET_SPECIAL_MEM(classNameStr, memNameStr, value) NAMESPACE setVariable [CLASS_SPECIAL_MEM_NAME_STR(classNameStr, memNameStr), value]
 #define GET_SPECIAL_MEM(classNameStr, memNameStr) ( NAMESPACE getVariable CLASS_SPECIAL_MEM_NAME_STR(classNameStr, memNameStr) )
 
@@ -94,11 +103,13 @@
 	#define SET_STATIC_MEM(classNameStr, memNameStr, value) if([classNameStr, memNameStr, __FILE__, __LINE__] call OOP_assert_staticMember) then {FORCE_SET_STATIC_MEM(classNameStr, memNameStr, value)}
 	#define GET_MEM(objNameStr, memNameStr) ( if([objNameStr, memNameStr, __FILE__, __LINE__] call OOP_assert_member) then {FORCE_GET_MEM(objNameStr, memNameStr)}else{nil} )
 	#define GET_STATIC_MEM(classNameStr, memNameStr) ( if([classNameStr, memNameStr, __FILE__, __LINE__] call OOP_assert_staticMember) then {FORCE_GET_STATIC_MEM(classNameStr, memNameStr)}else{nil} )
+	#define GET_METHOD(classNameStr, methodNameStr) ( if([classNameStr, methodNameStr, __FILE__, __LINE__] call OOP_assert_method) then {FORCE_GET_METHOD(classNameStr, methodNameStr)}else{nil} )
 #else
 	#define SET_MEM(objNameStr, memNameStr, value) FORCE_SET_MEM(objNameStr, memNameStr, value)
 	#define SET_STATIC_MEM(classNameStr, memNameStr, value) FORCE_SET_STATIC_MEM(classNameStr, memNameStr, value)
 	#define GET_MEM(objNameStr, memNameStr) FORCE_GET_MEM(objNameStr, memNameStr)
 	#define GET_STATIC_MEM(classNameStr, memNameStr) FORCE_GET_STATIC_MEM(classNameStr, memNameStr)
+	#define GET_METHOD(classNameStr, methodNameStr) FORCE_GET_METHOD(classNameStr, methodNameStr)
 #endif
 
 // -----------------------------------------------------
@@ -107,8 +118,8 @@
 
 //Same performance for small functions
 //#define CALL_METHOD(objNameStr, methodNameStr, extraParams) ([objNameStr] + extraParams) call (call compile (CLASS_STATIC_MEM_NAME_STR(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)))
-#define CALL_METHOD(objNameStr, methodNameStr, extraParams) ([objNameStr] + extraParams) call GET_STATIC_MEM(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)
-#define CALL_STATIC_METHOD(classNameStr, methodNameStr, extraParams) (extraParams) call (call compile (OOP_PREFIX + classNameStr + methodNameStr))
+#define CALL_METHOD(objNameStr, methodNameStr, extraParams) ([objNameStr] + extraParams) call GET_METHOD(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)
+#define CALL_STATIC_METHOD(classNameStr, methodNameStr, extraParams) (extraParams) call GET_METHOD(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)
 
 // -----------------------------------------------------
 // |       M E M B E R   D E C L A R A T I O N S       |
@@ -118,19 +129,19 @@
 
 #define STATIC_VARIABLE(varNameStr) _oop_staticMemList pushBackUnique varNameStr
 
-#define METHOD(methodNameStr) _oop_staticMemList pushBackUnique methodNameStr; \
-NAMESPACE setVariable [CLASS_STATIC_MEM_NAME_STR(_oop_classNameStr, methodNameStr),
+#define METHOD(methodNameStr) _oop_methodList pushBackUnique methodNameStr; \
+NAMESPACE setVariable [CLASS_METHOD_NAME_STR(_oop_classNameStr, methodNameStr),
 
 #define ENDMETHOD ]
 
-#define METHOD_FILE(methodNameStr, path) _oop_staticMemList pushBackUnique methodNameStr; \
-NAMESPACE setVariable [CLASS_STATIC_MEM_NAME_STR(_oop_classNameStr, methodNameStr), compile preprocessFileLineNumbers path]
+#define METHOD_FILE(methodNameStr, path) _oop_methodList pushBackUnique methodNameStr; \
+NAMESPACE setVariable [CLASS_METHOD_NAME_STR(_oop_classNameStr, methodNameStr), compile preprocessFileLineNumbers path]
 
-#define STATIC_METHOD(methodNameStr) _oop_staticMemList pushBackUnique methodNameStr; \
-NAMESPACE setVariable [CLASS_STATIC_MEM_NAME_STR(_oop_classNameStr, methodNameStr),
+#define STATIC_METHOD(methodNameStr) _oop_methodList pushBackUnique methodNameStr; \
+NAMESPACE setVariable [CLASS_METHOD_NAME_STR(_oop_classNameStr, methodNameStr),
 
-#define STATIC_METHOD_FILE(methodNameStr, path) _oop_staticMemList pushBackUnique methodNameStr; \
-NAMESPACE setVariable [CLASS_STATIC_MEM_NAME_STR(_oop_classNameStr, methodNameStr), compile preprocessFileLineNumbers path]
+#define STATIC_METHOD_FILE(methodNameStr, path) _oop_methodList pushBackUnique methodNameStr; \
+NAMESPACE setVariable [CLASS_METHOD_NAME_STR(_oop_classNameStr, methodNameStr), compile preprocessFileLineNumbers path]
 
 // ----------------------------------------
 // |              C L A S S               |
@@ -151,19 +162,22 @@ SET_SPECIAL_MEM(_oop_classNameStr, NEXT_ID_STR, 0); \
 private _oop_memList = []; \
 private _oop_staticMemList = []; \
 private _oop_parents = []; \
+private _oop_methodList = []; \
 if (baseClassNameStr != "") then { \
 	if (!([baseClassNameStr, __FILE__, __LINE__] call OOP_assert_class)) then {breakOut "scopeClass";}; \
 	_oop_parents = +GET_SPECIAL_MEM(baseClassNameStr, PARENTS_STR); _oop_parents pushBackUnique baseClassNameStr; \
 	_oop_memList = +GET_SPECIAL_MEM(baseClassNameStr, MEM_LIST_STR); \
 	_oop_staticMemList = +GET_SPECIAL_MEM(baseClassNameStr, STATIC_MEM_LIST_STR); \
+	_oop_methodList = +GET_SPECIAL_MEM(baseClassNameStr, METHOD_LIST_STR); \
 	private _oop_topParent = _oop_parents select ((count _oop_parents) - 1); \
-	{ private _oop_methodCode = FORCE_GET_STATIC_MEM(_oop_topParent, _x); \
-	diag_log format ["Copying method: %1", _x]; FORCE_SET_STATIC_MEM(classNameStr, _x, _oop_methodCode); \
-	} forEach (_oop_staticMemList - ["new", "delete", "copy"]); \
+	{ private _oop_methodCode = FORCE_GET_METHOD(_oop_topParent, _x); \
+	diag_log format ["Copying method: %1", _x]; FORCE_SET_METHOD(classNameStr, _x, _oop_methodCode); \
+	} forEach (_oop_methodList - ["new", "delete", "copy"]); \
 }; \
 SET_SPECIAL_MEM(_oop_classNameStr, PARENTS_STR, _oop_parents); \
 SET_SPECIAL_MEM(_oop_classNameStr, MEM_LIST_STR, _oop_memList); \
 SET_SPECIAL_MEM(_oop_classNameStr, STATIC_MEM_LIST_STR, _oop_staticMemList); \
+SET_SPECIAL_MEM(_oop_classNameStr, METHOD_LIST_STR, _oop_methodList); \
 METHOD("new") {} ENDMETHOD; \
 METHOD("delete") {} ENDMETHOD; \
 METHOD("copy") {} ENDMETHOD; \
@@ -207,7 +221,7 @@ private _oop_parents = GET_SPECIAL_MEM(classNameStr, PARENTS_STR); \
 private _oop_i = 0; \
 private _oop_parentCount = count _oop_parents; \
 while {_oop_i < _oop_parentCount} do { \
-	([_objNameStr] + extraParams) call GET_STATIC_MEM((_oop_parents select _oop_i), "new"); \
+	([_objNameStr] + extraParams) call GET_METHOD((_oop_parents select _oop_i), "new"); \
 	_oop_i = _oop_i + 1; \
 }; \
 CALL_METHOD(_objNameStr, "new", extraParams); \
@@ -239,7 +253,7 @@ private _oop_parentCount = count _oop_parents; \
 private _oop_i = _oop_parentCount - 1; \
 CALL_METHOD(objNameStr, "delete", []); \
 while {_oop_i > -1} do { \
-[objNameStr] call GET_STATIC_MEM((_oop_parents select _oop_i), "delete"); \
+[objNameStr] call GET_METHOD((_oop_parents select _oop_i), "delete"); \
 _oop_i = _oop_i - 1; \
 }; \
 private _oop_memList = GET_SPECIAL_MEM(_oop_classNameStr, MEM_LIST_STR); \
