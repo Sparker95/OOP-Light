@@ -152,7 +152,6 @@ NAMESPACE setVariable [CLASS_METHOD_NAME_STR(_oop_classNameStr, methodNameStr), 
  * First we initialize special members of the class, then we initialize new, delete and copy methods.
  * The name of this class is added to the hierarchy of its base class, if it's not "".
  * The methods of base class are copied to the methods of the derived class, except for "new" and "delete", because they will be called through the hierarchy anyway.
- * Currently the values of all static members are being copied but it doesn't matter since at class initialization typically only methods exist.
  */
 
 #define CLASS(classNameStr, baseClassNameStr)	[] call { \
@@ -171,7 +170,7 @@ if (baseClassNameStr != "") then { \
 	_oop_methodList = +GET_SPECIAL_MEM(baseClassNameStr, METHOD_LIST_STR); \
 	private _oop_topParent = _oop_parents select ((count _oop_parents) - 1); \
 	{ private _oop_methodCode = FORCE_GET_METHOD(_oop_topParent, _x); \
-	diag_log format ["Copying method: %1", _x]; FORCE_SET_METHOD(classNameStr, _x, _oop_methodCode); \
+	FORCE_SET_METHOD(classNameStr, _x, _oop_methodCode); \
 	} forEach (_oop_methodList - ["new", "delete", "copy"]); \
 }; \
 SET_SPECIAL_MEM(_oop_classNameStr, PARENTS_STR, _oop_parents); \

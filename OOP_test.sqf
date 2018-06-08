@@ -8,6 +8,7 @@ CLASS("Vehicle", "")
 	VARIABLE("pos");
 	VARIABLE("velocity");
 	STATIC_VARIABLE("factory");
+	STATIC_VARIABLE("all");
 	
 	METHOD("setPos")
 	{
@@ -30,6 +31,9 @@ CLASS("Vehicle", "")
 		private _pos = [10, 11, 12];
 		SET_MEM(_thisObject, "pos", _pos);
 		SET_MEM(_thisObject, "velocity", 100);
+		private _allArray = GET_STATIC_MEM("Vehicle", "all");
+		_allArray pushBack _thisObject;
+		SET_STATIC_MEM("Vehicle", "all", _allArray);
 	} ENDMETHOD;
 	
 	METHOD("delete") {
@@ -46,6 +50,9 @@ CLASS("Ground", "Vehicle")
 	METHOD("new") {
 		params["_thisObject"];
 		diag_log "Ground: constructor";
+		private _allArray = GET_STATIC_MEM("Ground", "all");
+		_allArray pushBack _thisObject;
+		SET_STATIC_MEM("Ground", "all", _allArray);
 	} ENDMETHOD;
 	
 	METHOD("delete") {
@@ -64,6 +71,9 @@ CLASS("Car", "Ground")
 	METHOD("new") {
 		params["_thisObject"];
 		diag_log "Car: constructor";
+		private _allArray = GET_STATIC_MEM("Car", "all");
+		_allArray pushBack _thisObject;
+		SET_STATIC_MEM("Car", "all", _allArray);
 	} ENDMETHOD;
 	
 	METHOD("delete") {
@@ -80,7 +90,10 @@ CLASS("Offroad", "Car")
 	METHOD("new") {
 		params["_thisObject"];
 		diag_log "Offroad: constructor";
-		SET_MEM(_thisObject, "cargoType", "open")
+		SET_MEM(_thisObject, "cargoType", "open");
+		private _allArray = GET_STATIC_MEM("Offroad", "all");
+		_allArray pushBack _thisObject;
+		SET_STATIC_MEM("Offroad", "all", _allArray);
 	} ENDMETHOD;
 	
 	METHOD("delete") {
@@ -92,6 +105,11 @@ ENDCLASS;
 
 
 // T E S T I N G
+//Init the static variable first
+SET_STATIC_MEM("Vehicle", "all", []);
+SET_STATIC_MEM("Ground", "all", []);
+SET_STATIC_MEM("Car", "all", []);
+SET_STATIC_MEM("Offroad", "all", []);
 //Try to create a few objects
 private _veh0 = NEW("Vehicle", []);
 diag_log format [">> _veh0: %1", _veh0];
