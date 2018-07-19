@@ -60,7 +60,7 @@
 #define CLASS_STATIC_MEM_NAME_STR(classNameStr, memNameStr) (OOP_PREFIX + classNameStr + STATIC_SEPARATOR + memNameStr)
 
 //String name of a method
-#define CLASS_METHOD_NAME_STR(classNameStr, methodNameStr) (OOP_PREFIX + classNameStr + METHOD_SEPARATOR + methodNameStr)
+#define CLASS_METHOD_NAME_STR(classNameStr, methodNameStr) (classNameStr + METHOD_SEPARATOR + methodNameStr)
 
 //String name of a special member
 #define CLASS_SPECIAL_MEM_NAME_STR(classNameStr, memNameStr) (OOP_PREFIX + classNameStr + SPECIAL_SEPARATOR + memNameStr)
@@ -112,6 +112,11 @@
 	#define GET_METHOD(classNameStr, methodNameStr) FORCE_GET_METHOD(classNameStr, methodNameStr)
 #endif
 
+#define SET_VAR(a, b, c) SET_MEM(a, b, c)
+#define SET_STATIC_VAR(a, b, c) SET_STATIC_MEM(a, b, c)
+#define GET_VAR(a, b) GET_MEM(a, b)
+#define GET_STATIC_VAR(a, b) GET_STATIC_MEM(a, b)
+
 // -----------------------------------------------------
 // |             M E T H O D   C A L L S               |
 // -----------------------------------------------------
@@ -119,7 +124,8 @@
 //Same performance for small functions
 //#define CALL_METHOD(objNameStr, methodNameStr, extraParams) ([objNameStr] + extraParams) call (call compile (CLASS_STATIC_MEM_NAME_STR(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)))
 #define CALL_METHOD(objNameStr, methodNameStr, extraParams) ([objNameStr] + extraParams) call GET_METHOD(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)
-#define CALL_STATIC_METHOD(classNameStr, methodNameStr, extraParams) (extraParams) call GET_METHOD(OBJECT_PARENT_CLASS_STR(objNameStr), methodNameStr)
+#define CALL_CLASS_METHOD(classNameStr, objNameStr, methodNameStr, extraParams) ([objNameStr] + extraParams) call GET_METHOD(classNameStr, methodNameStr)
+#define CALL_STATIC_METHOD(classNameStr, methodNameStr, extraParams) (extraParams) call GET_METHOD(classNameStr, methodNameStr)
 
 // -----------------------------------------------------
 // |       M E M B E R   D E C L A R A T I O N S       |
@@ -128,6 +134,10 @@
 #define VARIABLE(varNameStr) _oop_memList pushBackUnique varNameStr
 
 #define STATIC_VARIABLE(varNameStr) _oop_staticMemList pushBackUnique varNameStr
+
+#define MEMBER(memNameStr) VARIABLE(memNameStr)
+
+#define STATIC_MEMBER(memNameStr) STATIC_VARIABLE(memNameStr)
 
 #define METHOD(methodNameStr) _oop_methodList pushBackUnique methodNameStr; \
 NAMESPACE setVariable [CLASS_METHOD_NAME_STR(_oop_classNameStr, methodNameStr),
