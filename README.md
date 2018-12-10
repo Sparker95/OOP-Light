@@ -9,7 +9,7 @@ A preprocessor-based OOP extension for SQF.
 4. Supports most OOP features: methods, member variables, virtual functions, inheritance.
 
 ## Documentation
-To be done.
+Look at the wiki page.
 
 ## Current state
 Seems to be mostly working. I am actively using it so I will be fixing errors in the process.
